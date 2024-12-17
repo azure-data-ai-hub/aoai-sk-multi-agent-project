@@ -51,7 +51,7 @@ The backend is built with ASP.NET Core and integrates with Azure OpenAI and the 
 dotnet user-secrets init
 dotnet user-secrets set "AzureOpenAI:ApiKey" "<your-api-key>"
 dotnet user-secrets set "AzureOpenAI:EndPoint" "<your-endpoint>"
-dotnet user-secrets set "AzureOpenAI:DeploymentName" "gpt-4o-mini"
+dotnet user-secrets set "AzureOpenAI:DeploymentName" "<your-deployment>"
 
 ### Running the Backend
 
