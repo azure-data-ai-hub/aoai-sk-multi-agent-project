@@ -47,8 +47,20 @@ The backend is built with ASP.NET Core and integrates with Azure OpenAI and the 
 - `POST /VectorSearch`: Vector search endpoint.
 - `POST /MaintenanceCopilotChat`: Chat with the Maintenance Copilot.
 
+### Setting Up Dotnet Secrets
+dotnet user-secrets init
+dotnet user-secrets set "AzureOpenAI:ApiKey" "<your-api-key>"
+dotnet user-secrets set "AzureOpenAI:EndPoint" "<your-endpoint>"
+dotnet user-secrets set "AzureOpenAI:DeploymentName" "gpt-4o-mini"
+
 ### Running the Backend
 
 1. **Build the project**:
    ```sh
    dotnet build
+2. **Rune the project**:
+   ```sh
+   dotnet run
+
+
+
