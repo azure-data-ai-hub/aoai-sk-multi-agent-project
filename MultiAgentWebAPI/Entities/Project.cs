@@ -1,8 +1,8 @@
 namespace MultiAgentWebAPI.Entities;
 public class Project
 {
-    public required string ID { get; set; }
-    public required string Name { get; set; }
-    public required string Details { get; set; }
-    public required string Location { get; set; }
+    public required string ProjectID { get; set; }
+    public required string ProjectName { get; set; }
+    public required string Description { get; set; }
+    public required string Category { get; set; }
 }

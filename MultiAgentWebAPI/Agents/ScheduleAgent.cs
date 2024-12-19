@@ -2,7 +2,6 @@
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 using MultiAgentWebAPI.Plugins;
-using Microsoft.Azure.Cosmos;
 
 namespace MultiAgentWebAPI.Agents
 {
@@ -11,28 +10,19 @@ namespace MultiAgentWebAPI.Agents
         private const string ScheduleAgentName = "ScheduleAgent";
         private const string ScheduleAgentInstructions =
             """
-        You are a Project Schedule Assistant who likes to follow the rules. You will complete required steps
-        and request approval before taking any consequential actions, such as getting schdule details from the database.
-        If the user doesn't provide enough information for you to complete a task, you will keep asking questions
-        until you have enough information to complete the task.
-        """;
+            You are a Project Schedule Assistant focused on managing and tracking project schedule. 
+            Your responsibilities include retrieving schedule details. Ensure efficient schedule management 
+            and proactively identify any issues that may affect project timelines.
+            """;
 
-        public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey, string cosmosConnectionString)
+        public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
         {
             IKernelBuilder builder = Kernel.CreateBuilder();
             builder.AddAzureOpenAIChatCompletion(
-             deploymentName: "gpt-4o",
+             deploymentName: deploymentName,
              endpoint: endPoint,
              apiKey: apiKey
             );
-
-            /*builder.Services.AddSingleton<CosmosClient>((_) =>
-            {
-                CosmosClient client = new(
-                    connectionString: cosmosConnectionString
-                );
-                return client;
-            });*/
 
             builder.Plugins.AddFromType<SchedulePlugin>();
 

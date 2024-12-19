@@ -1,15 +1,9 @@
-using Microsoft.Azure.Cosmos;
 using MultiAgentWebAPI.Agents;
-using MultiAgentWebAPI.Plugins;
-using MultiAgentWebAPI.Services;
-using Azure.AI.OpenAI;
-using Azure;
 using Microsoft.AspNetCore.Mvc;
 
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.ChatCompletion;
-using MultiAgentWebAPI;
 using Microsoft.SemanticKernel.Agents;
 
 
@@ -18,17 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-builder.Services.AddSingleton<IVectorizationService, VectorizationService>();
-builder.Services.AddSingleton<MaintenanceCopilot, MaintenanceCopilot>();
-
-builder.Services.AddSingleton<CosmosClient>((_) =>
-{
-    CosmosClient client = new(
-        connectionString: builder.Configuration["CosmosDB:ConnectionString"]!
-    );
-    return client;
-});
 
 builder.Services.AddSingleton<Kernel>((_) =>
 {
@@ -69,25 +52,25 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/", async () =>
+app.MapGet("/", () =>
 {
     return "Welcome to the Multi Agent Web API!";
 })
     .WithName("Index");
 
-app.MapPost("/ProjectManagerAgentChat", async Task<string> (HttpRequest request) =>
+app.MapPost("/ProjectManagerAgentChat", string (HttpRequest request) =>
 {
     return "Welcome to Project Manager Agent Chat";
 })
     .WithName("ProjectManagerAgentChat");
 
-app.MapPost("/ScheduleAgentChat", async Task<string> (HttpRequest request) =>
+app.MapPost("/ScheduleAgentChat", string (HttpRequest request) =>
 {
     return"Welcome to Scheudle Agent Chat";
 })
     .WithName("ScheduleAgentChat");
 
-app.MapPost("/FinanaceAgentChat", async Task<string> (HttpRequest request) =>
+app.MapPost("/FinanaceAgentChat", string (HttpRequest request) =>
 {
     return "Welcome to Finanace Agent Chat";
 })
@@ -97,33 +80,53 @@ app.MapPost("/FinanaceAgentChat", async Task<string> (HttpRequest request) =>
 app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
 {
 
-    // TODO: Factory pattern to create tehse agents
+    // TODO: Factory pattern to create these agents
+
+    ChatCompletionAgent projectStatusAgent = new ProjectStatusAgent().Initialize(
+        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
+        endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
+        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
+        );
 
     ChatCompletionAgent projectManagerAgent = new ProjectManagerAgent().Initialize(
         deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
         endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
-        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!,
-        cosmosConnectionString: ""
+        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
         );
 
+    ChatCompletionAgent projectTaskAgent = new ProjectTasksAgent().Initialize(
+        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
+        endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
+        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
+        );
+
+    ChatCompletionAgent safetyRiskAgent = new SafetyRiskAgent().Initialize(
+        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
+        endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
+        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
+        );
 
     ChatCompletionAgent scheduleAgent = new ScheduleAgent().Initialize(
         deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
         endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
-        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!,
-        cosmosConnectionString: ""
+        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
         );
 
-    ChatCompletionAgent finanaceAgent = new FinanaceAgent().Initialize(
+    ChatCompletionAgent finanaceAgent = new FinanceAgent().Initialize(
         deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
         endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
-        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!,
-        cosmosConnectionString: ""
+        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
+        );
+
+    ChatCompletionAgent vendorManagementAgent = new VendorManagementAgent().Initialize(
+        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
+        endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
+        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
         );
 
     // Create a chat for agent interaction.
     AgentGroupChat chat =
-        new(projectManagerAgent, scheduleAgent, finanaceAgent)
+        new(projectManagerAgent, projectStatusAgent, projectTaskAgent, safetyRiskAgent, scheduleAgent, finanaceAgent, vendorManagementAgent)
         {
             ExecutionSettings =
                 new()
@@ -133,7 +136,7 @@ app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
                     TerminationStrategy =
                         new ApprovalTerminationStrategy()
                         {
-                            Agents = [projectManagerAgent],
+                            Agents = [projectStatusAgent],
                             MaximumIterations = 10,
                         }
                 }
@@ -175,29 +178,5 @@ app.MapPost("/Chat", async Task<string> (HttpRequest request) =>
     return response?.Content!;
 })
     .WithName("Chat");
-
-
-app.MapGet("/Vectorize", async (string text, [FromServices] IVectorizationService vectorizationService) =>
-{
-    var embeddings = await vectorizationService.GetEmbeddings(text);
-    return embeddings;
-})
-    .WithName("Vectorize");
-
-app.MapPost("/VectorSearch", async ([FromBody] float[] queryVector, [FromServices] IVectorizationService vectorizationService, int max_results = 0, double minimum_similarity_score = 0.8) =>
-{
-    var results = await vectorizationService.ExecuteVectorSearch(queryVector, max_results, minimum_similarity_score);
-    return results;
-
-})
-    .WithName("VectorSearch");
-
-app.MapPost("/MaintenanceCopilotChat", async ([FromBody] string message, [FromServices] MaintenanceCopilot copilot) =>
-{
-    var response = await copilot.Chat(message);
-    return response;
-
-})
-    .WithName("Copilot");
 
 app.Run();

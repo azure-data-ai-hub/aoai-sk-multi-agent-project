@@ -1,34 +1,37 @@
 ﻿using System.ComponentModel; 
 using MultiAgentWebAPI.Entities;
-using Microsoft.Azure.Cosmos;
 using Microsoft.SemanticKernel;
+using MultiAgentWebAPI.Utilities;
 
 namespace MultiAgentWebAPI.Plugins
 {
     public class SchedulePlugin()
     {
-        //private readonly CosmosClient _cosmosClient = cosmosClient;
-
         [KernelFunction("get_schedule_details")]
         [Description("Gets Schedule Details for the Project.")]
-        public async Task<Schedule> GetSchedule(Kernel kernel, string ProjectID)
+        public IEnumerable<Schedule> GetSchedule(Kernel kernel, string ProjectID)
         {
-            try
+             try
             {
-                Console.WriteLine($"Get schedule details from cosmos for the {ProjectID}.");
+                Console.WriteLine($"Get schedule details from CSV for: {ProjectID}.");
 
-                /*var db = _cosmosClient.GetDatabase("MultiAgentCosmosDB");
-                var container = db.GetContainer("Schedules");
+                var csvFilePath = "data/Project Financials.csv";
 
-                var query = $"SELECT c.ProjectID , c.CurrentMileStone, c.Details FROM c where c.ProjectID=={ProjectID}";
+                var schedule = CSVHelper.ReadRecords<Schedule>(csvFilePath, s => s.ProjectID.Equals(ProjectID, StringComparison.OrdinalIgnoreCase));
 
-                var schdule = await container.ReadItemAsync<Schedule>(id: ProjectID.ToString(), partitionKey: new PartitionKey("Location"));*/
-
-                return new() { CurrentMileStone="December 31st", Details="Interior wroks to be completed by 12/24", ProjectID="P12345"};
+                if (schedule != null)
+                {
+                    return schedule;
+                }
+                else
+                {
+                    Console.WriteLine("No schedule found in CSV.");
+                    return Enumerable.Empty<Schedule>();
+                }
             }
             catch (Exception ex)
             {
-                throw new Exception($"An exception occurred while getting schedule details: {ex}");
+                throw new Exception($"An exception occurred while getting schedule details: {ex.Message}");
             }
         }
     }

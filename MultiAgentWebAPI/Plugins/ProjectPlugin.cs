@@ -1,30 +1,31 @@
-﻿using System.ComponentModel; 
+﻿using System.ComponentModel;
 using MultiAgentWebAPI.Entities;
-using Microsoft.Azure.Cosmos;
 using Microsoft.SemanticKernel;
+using MultiAgentWebAPI.Utilities;
 
 namespace MultiAgentWebAPI.Plugins
 {
     public class ProjectPlugin()
     {
-        //private readonly CosmosClient _cosmosClient = cosmosClient;
-
         [KernelFunction("get_project_details")]
-        [Description("Gets Details for the Project.")]
-        public async Task<Project> GetProject(Kernel kernel, string ProjectName)
+        [Description("Gets Details for the Project by passing ProjectNam as input.")]
+        public Project? GetProject(Kernel kernel, string ProjectName)
         {
             try
             {
-                Console.WriteLine($"Get project details from cosmos for the {ProjectName}.");
+                Console.WriteLine($"Get project details from CSV for: {ProjectName}.");
 
-                /* var db = _cosmosClient.GetDatabase("MultiAgentCosmosDB");
-                var container = db.GetContainer("Schedules");
+                var csvFilePath = "data/Projectinfo.csv";
 
-                var query = $"SELECT c.ProjectID , c.ProjectDetails FROM c where c.ProjectName=={ProjectName}";
+                var project = CSVHelper.ReadRecords<Project>(csvFilePath, s => s.ProjectName.Contains(ProjectName, StringComparison.OrdinalIgnoreCase));
+                
+                if (project == null || !project.Any())
+                {
+                    Console.WriteLine("No project found in CSV.");
+                    return null;
+                }
 
-                var schdule = await container.ReadItemAsync<Project>(id: ProjectName, partitionKey: new PartitionKey("Location")); */
-
-                return new() { Details="Grand Hotel Project Located in the heart of Seattle, WA", ID="P12345", Location="Seattle, WA", Name="Hotel Grand" };
+                return project.FirstOrDefault();
             }
             catch (Exception ex)
             {

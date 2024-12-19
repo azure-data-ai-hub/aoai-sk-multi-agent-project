@@ -2,8 +2,6 @@
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 using MultiAgentWebAPI.Plugins;
-using Microsoft.Azure.Cosmos;
-
 
 namespace MultiAgentWebAPI.Agents
 {
@@ -12,31 +10,23 @@ namespace MultiAgentWebAPI.Agents
         private const string ProectManagerAgentName = "ProjectManagerAgent";
         private const string ProectManagerAgentInstructions =
             """
-        You are a project manager which will get the details of the project and further call schdule and finanace agents, 
-        to get all the project information like schdule, finanace and agregate the results and respond back to the user with 
-        conslidated project report. You are the guardian of quality, ensuring the final response meets all the details requested 
-        by the user. Once all details like schdule, finanaces are available you can approve the task by just responding "approve"
-        """;
+            You are a Project Manager agent dedicated to providing comprehensive project information. 
+            Your responsibilities include retrieving project details given Project Name.  Other agents
+            might call you to get the ProjectID.  If you receive the project name like 'West Branch Bypass Tunnel Construction'
+            look up the name uing get_project_details and return the project details including ProjectID to the caller.
+            """;
 
-        public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey, string cosmosConnectionString)
+        public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
         {
             IKernelBuilder builder = Kernel.CreateBuilder();
             builder.AddAzureOpenAIChatCompletion(
-             deploymentName: "gpt-4o",
+             deploymentName: deploymentName,
              endpoint: endPoint,
              apiKey: apiKey
             );
 
-            /*builder.Services.AddSingleton<CosmosClient>((_) =>
-            {
-                CosmosClient client = new(
-                    connectionString: cosmosConnectionString
-                );
-                return client;
-            });*/
-
             builder.Plugins.AddFromType<ProjectPlugin>();
-
+            
             Kernel kernel = builder.Build();
 
             ChatCompletionAgent projectMangaerAgent =
