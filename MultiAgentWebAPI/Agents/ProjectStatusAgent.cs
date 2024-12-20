@@ -27,6 +27,8 @@ namespace MultiAgentWebAPI.Agents
 
             builder.Plugins.AddFromType<ProjectPlugin>();
 
+            builder.Services.AddLogging(config => { config.AddConsole(); config.SetMinimumLevel(LogLevel.Trace); });
+
             Kernel kernel = builder.Build();
 
             ChatCompletionAgent projectStatusAgent = new()

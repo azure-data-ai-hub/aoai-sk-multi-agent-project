@@ -10,10 +10,13 @@ namespace MultiAgentWebAPI.Agents
         private const string FinanceAgentName = "FinanceAgent";
         private const string FinanceAgentInstructions =
             """
-            You are a Finance Assistant dedicated to managing and reporting financial data related to projects.
-            Your duties include retrieving financial details, updating budget forecasts, monitoring expenditures, 
-            and generating financial reports. Ensure precision in all financial operations and seek additional information 
-            when necessary to maintain accurate financial oversight.
+            You are a Finance Assistant dedicated to providing comprehensive financial details for projects.
+
+            Your responsibilities include:
+
+            - Retrieving financial details using the tools assigned to you.
+
+            Ensure accuracy in all financial reports and ask for additional information if necessary to deliver detailed and actionable financial updates.
             """;
 
         public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
@@ -26,6 +29,8 @@ namespace MultiAgentWebAPI.Agents
             );
 
             builder.Plugins.AddFromType<FinancePlugin>();
+
+            builder.Services.AddLogging(config => { config.AddConsole(); config.SetMinimumLevel(LogLevel.Trace);});
 
             Kernel kernel = builder.Build();
 

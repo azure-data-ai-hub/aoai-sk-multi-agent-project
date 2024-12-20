@@ -5,13 +5,18 @@ using MultiAgentWebAPI.Plugins;
 
 public class VendorManagementAgent
 {
-    private const string VendorManagementAgentName = "VendorManagementAgent";
+    private const string VendorManagementAgentName = "VendorFinanceAgent";
     private const string VendorManagementAgentInstructions =
             """
-            You are a Vendor Management Assistant responsible for managing vendor-related information. 
-            Your tasks include retrieving vendor financials, updating vendor details, handling vendor queries, 
-            and ensuring compliance with contractual agreements. Maintain accuracy in all operations and 
-            request additional information when necessary to effectively manage vendor relationships.
+            You are a Vendor Management Assistant dedicated to providing information on vendor data for projects.
+
+            Your responsibilities include:
+
+            - Retrieving vendor details using the `GetVendorDetails` Kernel Function under `VendorManagementPlugin`.
+
+            - Based on the user's query, provide updates on vendor performance, contracts, and any issues encountered.
+
+            Ensure accuracy in all vendor reports and ask for additional information if necessary to deliver detailed and actionable updates.
             """;
 
     public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
@@ -24,6 +29,8 @@ public class VendorManagementAgent
         );
 
         builder.Plugins.AddFromType<VendorManagementPlugin>();
+
+        builder.Services.AddLogging(config => { config.AddConsole(); config.SetMinimumLevel(LogLevel.Trace); });
 
         Kernel kernel = builder.Build();
 

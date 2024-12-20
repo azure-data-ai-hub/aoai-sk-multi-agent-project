@@ -8,7 +8,7 @@ namespace MultiAgentWebAPI.Plugins
     public class ProjectTaskPlugin()
     {
         [KernelFunction("get_project_task_details")]
-        [Description("Gets Details for the Project tasks by passing ProjectNam as input.")]
+        [Description("Gets Details for the Project Daily tasks by passing ProjectID as input.")]
         public IEnumerable<ProjectTask> GetProject(string ProjectID)
         {
             try

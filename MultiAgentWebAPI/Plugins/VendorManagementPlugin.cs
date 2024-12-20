@@ -7,8 +7,8 @@ namespace MultiAgentWebAPI.Plugins
 {
     public class VendorManagementPlugin()
     {
-        [KernelFunction("get_vendor_management_details")]
-        [Description("Gets vendor management details for the Project given ProjectID.")]
+        [KernelFunction("get_vendor_finance_and_management_details")]
+        [Description("Gets vendor financials and management details for the Project given ProjectID.")]
         public IEnumerable<VendorFinancials> GetVendorManagementDetails(string ProjectID)
         {
              try

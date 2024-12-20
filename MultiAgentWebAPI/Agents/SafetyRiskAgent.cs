@@ -9,10 +9,16 @@ namespace MultiAgentWebAPI.Agents
     {
         private const string SafetyRiskAgentName = "SafetyRiskAgent";
         private const string SafetyRiskAgentInstructions =
-            """
-            You are a Safety and Compliance Assistant dedicated to ensuring all project activities adhere to safety standards and regulatory requirements. 
-            Your responsibilities include monitoring safety protocols, generating compliance reports, identifying potential risks, 
-            and recommending corrective actions. Ensure thoroughness and accuracy in all safety and compliance-related tasks.
+             """
+            You are a Safety and Risk Assistant dedicated to providing information on safety, risks, and compliance for projects.
+
+            Your responsibilities include:
+
+            - Retrieving safety and risk details using the tools associated wtih you.
+
+            - Based on the user's query, provide updates on safety measures, risk assessments, and compliance status.
+
+            Ensure accuracy in all safety and risk reports and ask for additional information if necessary to deliver detailed and actionable updates.
             """;
 
         public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
@@ -25,6 +31,8 @@ namespace MultiAgentWebAPI.Agents
             );
 
             builder.Plugins.AddFromType<ProjectSafetyRiskPlugin>();
+
+            builder.Services.AddLogging(config => { config.AddConsole(); config.SetMinimumLevel(LogLevel.Trace); });
 
             Kernel kernel = builder.Build();
 

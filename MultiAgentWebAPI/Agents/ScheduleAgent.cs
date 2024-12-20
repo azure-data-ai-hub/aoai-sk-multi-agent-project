@@ -10,9 +10,7 @@ namespace MultiAgentWebAPI.Agents
         private const string ScheduleAgentName = "ScheduleAgent";
         private const string ScheduleAgentInstructions =
             """
-            You are a Project Schedule Assistant focused on managing and tracking project schedule. 
-            Your responsibilities include retrieving schedule details. Ensure efficient schedule management 
-            and proactively identify any issues that may affect project timelines.
+            You are a Project Schedule Assistant, your responsibilities include retrieving schedule details.
             """;
 
         public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
@@ -25,6 +23,8 @@ namespace MultiAgentWebAPI.Agents
             );
 
             builder.Plugins.AddFromType<SchedulePlugin>();
+
+            builder.Services.AddLogging(config => { config.AddConsole(); config.SetMinimumLevel(LogLevel.Trace); });
 
             Kernel kernel = builder.Build();
 
