@@ -113,7 +113,7 @@ function Chat() {
       <div className="messages">
         {messages.map((msg) => (
           <div key={msg.id} className={`message ${msg.sender}`}>
-            <span className="sender">{msg.sender === 'user' ? 'You' : 'Bot'}</span>
+            <span className="sender">{msg.sender === 'user' ? 'You' : msg.sender}</span>
             <span>{msg.text}</span>
             {msg.sender === 'bot' && (
               <div className="feedback-buttons">

@@ -16,7 +16,7 @@ namespace MultiAgentWebAPI.Agents
 
             - Retrieving financial details using the tools assigned to you.
 
-            Ensure accuracy in all financial reports and ask for additional information if necessary to deliver detailed and actionable financial updates.
+            Ensure accuracy in all financial reports.
             """;
 
         public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)

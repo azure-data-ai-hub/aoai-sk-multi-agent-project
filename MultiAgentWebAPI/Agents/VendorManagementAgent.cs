@@ -16,7 +16,7 @@ public class VendorManagementAgent
 
             - Based on the user's query, provide updates on vendor performance, contracts, and any issues encountered.
 
-            Ensure accuracy in all vendor reports and ask for additional information if necessary to deliver detailed and actionable updates.
+            Ensure accuracy in all vendor reports.
             """;
 
     public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)

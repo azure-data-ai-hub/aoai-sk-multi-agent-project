@@ -18,7 +18,7 @@ namespace MultiAgentWebAPI.Agents
 
             - Based on the user's query, provide updates on safety measures, risk assessments, and compliance status.
 
-            Ensure accuracy in all safety and risk reports and ask for additional information if necessary to deliver detailed and actionable updates.
+            Ensure accuracy in all safety and risk reports.
             """;
 
         public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)

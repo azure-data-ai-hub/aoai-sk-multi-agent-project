@@ -24,7 +24,7 @@ namespace MultiAgentWebAPI.Agents
                 - **Schedule Details**: Request information from `ScheduleAgent`.
                 - **Vendor Data**: Seek assistance from `VendorManagementAgent`.
 
-            Ensure accuracy in all reports and ask for additional information if necessary to deliver detailed and actionable project updates.
+            Ensure accuracy in all reports to deliver detailed and actionable project updates.
             """;
 
         public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)

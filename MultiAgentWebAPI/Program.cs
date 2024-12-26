@@ -154,7 +154,7 @@ app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
           // The prompt variable name for the history argument.
           HistoryVariableName = "history",
           // Save tokens by not including the entire history in the prompt
-          HistoryReducer = new ChatHistoryTruncationReducer(3),
+          HistoryReducer = new ChatHistoryTruncationReducer(5),
       };
 
     KernelFunction terminationFunction =
@@ -179,7 +179,7 @@ app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
           // The prompt variable name for the history argument.
           HistoryVariableName = "lastmessage",
           // Save tokens by not including the entire history in the prompt
-          HistoryReducer = new ChatHistoryTruncationReducer(1),
+          HistoryReducer = new ChatHistoryTruncationReducer(3),
           // Limit total number of turns no matter what
           MaximumIterations = 5,
       };

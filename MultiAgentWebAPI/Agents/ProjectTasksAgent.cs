@@ -18,7 +18,7 @@ namespace MultiAgentWebAPI.Agents
 
             - Based on the user's query, provide updates on daily tasks, their status, and any issues encountered.
 
-            Ensure accuracy in all task reports and ask for additional information if necessary to deliver detailed and actionable task updates.
+            Ensure accuracy in all task reports.
             """;
 
         public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
