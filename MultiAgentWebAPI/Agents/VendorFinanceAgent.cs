@@ -3,20 +3,18 @@ using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 using MultiAgentWebAPI.Plugins;
 
-public class VendorManagementAgent
+public class VendorFinanceAgent
 {
-    private const string VendorManagementAgentName = "VendorFinanceAgent";
-    private const string VendorManagementAgentInstructions =
+    private const string VendorFinanceAgentName = "VendorFinanceAgent";
+    private const string VendorFinanceAgentInstructions =
             """
-            You are a Vendor Management Assistant dedicated to providing information on vendor data for projects.
+            You are a Vendor Financials Assistant dedicated to providing information on vendor finanace data for projects.
 
             Your responsibilities include:
 
-            - Retrieving vendor details using the `GetVendorDetails` Kernel Function under `VendorManagementPlugin`.
+            - Retrieving vednor financial details using the tools assigned to you.
 
-            - Based on the user's query, provide updates on vendor performance, contracts, and any issues encountered.
-
-            Ensure accuracy in all vendor reports.
+            Ensure accuracy in all vendor finanacial reports.
             """;
 
     public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
@@ -28,27 +26,28 @@ public class VendorManagementAgent
             apiKey: apiKey
         );
 
-        builder.Plugins.AddFromType<VendorManagementPlugin>();
+        builder.Plugins.AddFromType<VendorFinancePlugin>();
 
         builder.Services.AddLogging(config => { config.AddConsole(); config.SetMinimumLevel(LogLevel.Trace); });
 
         Kernel kernel = builder.Build();
 
-        ChatCompletionAgent vendorManagementAgent = new()
+        ChatCompletionAgent vendorFinanceAgent = new()
         {
-            Name = VendorManagementAgentName,
-            Instructions = VendorManagementAgentInstructions,
+            Name = VendorFinanceAgentName,
+            Instructions = VendorFinanceAgentInstructions,
             Kernel = kernel,
             Arguments = new KernelArguments(new AzureOpenAIPromptExecutionSettings()
             {
-                FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+                FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
+                Temperature = 0.1
             })
                 {
                     { "repository", "microsoft/semantic-kernel" }
                 }
         };
 
-        return vendorManagementAgent;
+        return vendorFinanceAgent;
     }
 }
 

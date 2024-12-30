@@ -5,15 +5,16 @@ using MultiAgentWebAPI.Plugins;
 
 namespace MultiAgentWebAPI.Agents
 {
-    public class ProjectStatusAgent
+    public class ProjectLeaderAgent
     {
-        private const string ProjectStatusAgentName = "ProjectStatusAgent";
-        private const string ProjectStatusAgentInstructions =
+        private const string ProjectLeaderAgentName = "ProjectLeaderAgent";
+        private const string ProjectLeaderAgentInstructions =
             """
-            You are a Project Status Assistant dedicated to providing comprehensive project status reports. 
-            Your responsibilities include retrieving project details, monitoring progress, identifying potential delays, 
-            and offering insights to stakeholders. Ensure accuracy in all reports and ask for additional information 
-            if necessary to deliver detailed and actionable project updates.
+            As the Project Leader Agent, your job is to gather all the agent responses and combine them into a single cohesive project status report. Summarize the provided content without adding your own suggestions.
+
+            If information has been requested, only repeat the user request.
+
+            Do not come up with your own suggestions.
             """;
 
         public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
@@ -31,21 +32,22 @@ namespace MultiAgentWebAPI.Agents
 
             Kernel kernel = builder.Build();
 
-            ChatCompletionAgent projectStatusAgent = new()
+            ChatCompletionAgent projectLeaderAgent = new()
             {
-                Name = ProjectStatusAgentName,
-                Instructions = ProjectStatusAgentInstructions,
+                Name = ProjectLeaderAgentName,
+                Instructions = ProjectLeaderAgentInstructions,
                 Kernel = kernel,
                 Arguments = new KernelArguments(new AzureOpenAIPromptExecutionSettings()
                 {
-                    FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+                    FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(),
+                    Temperature = 0.1
                 })
                 {
                     { "repository", "microsoft/semantic-kernel" }
                 }
             };
 
-            return projectStatusAgent;
+            return projectLeaderAgent;
         }
     }
 }

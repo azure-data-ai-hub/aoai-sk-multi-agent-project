@@ -10,11 +10,11 @@ namespace MultiAgentWebAPI.Agents
         private const string ProectManagerAgentName = "ProjectManagerAgent";
         private const string ProectManagerAgentInstructions =
             """
-            You are a Project Manager Assistant dedicated to providing comprehensive project status reports.
+            You are a Project Manager Agent dedicated to providing project details.
 
             Your responsibilities include:
 
-            - Retrieving project details using the tools associated with you.
+            - Retrieving only project details using the tools associated with you.
 
             - Based on the user's query, and informatin required, suggest calling appropriate agents from the list below:
 
@@ -22,9 +22,8 @@ namespace MultiAgentWebAPI.Agents
                 - **Project Daily Status or Tasks**: Ask `ProjectStatusAgent` for updates.
                 - **Safety, Risks, and Compliance**: Consult `SafetyRiskAgent`.
                 - **Schedule Details**: Request information from `ScheduleAgent`.
-                - **Vendor Data**: Seek assistance from `VendorManagementAgent`.
+                - **Vendor Financials**: Seek assistance from `VendorFinanceAgent`.
 
-            Ensure accuracy in all reports to deliver detailed and actionable project updates.
             """;
 
         public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
@@ -49,7 +48,7 @@ namespace MultiAgentWebAPI.Agents
                 Instructions = ProectManagerAgentInstructions,
                 Kernel = kernel,
                 Arguments =
-                    new KernelArguments(new AzureOpenAIPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto() })
+                    new KernelArguments(new AzureOpenAIPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(), Temperature=0.1 })
                     {
                         { "repository", "microsoft/semantic-kernel" }
                     }

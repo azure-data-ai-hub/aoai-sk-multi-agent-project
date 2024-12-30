@@ -7,7 +7,8 @@ using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.Agents.Chat;
 using Microsoft.SemanticKernel.Agents.History;
-
+using ChatResponseFormat = OpenAI.Chat.ChatResponseFormat;
+using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,6 +72,12 @@ app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
 
     // TODO: Factory pattern to create these agents
 
+    ChatCompletionAgent projectLeaderAgent = new ProjectLeaderAgent().Initialize(
+        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
+        endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
+        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
+        );
+
     ChatCompletionAgent projectManagerAgent = new ProjectManagerAgent().Initialize(
         deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
         endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
@@ -101,7 +108,7 @@ app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
         apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
         );
 
-    ChatCompletionAgent vendorManagementAgent = new VendorManagementAgent().Initialize(
+    ChatCompletionAgent vendorFinanceAgent = new VendorFinanceAgent().Initialize(
         deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
         endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
         apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
@@ -125,18 +132,20 @@ app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
         State only the name of the participant with out explanation to take the next turn.
 
         Choose only from these participants:
+        - {{{projectLeaderAgent.Name}}}
         - {{{projectTaskAgent.Name}}}
         - {{{safetyRiskAgent.Name}}}
         - {{{scheduleAgent.Name}}}
         - {{{finanaceAgent.Name}}}
-        - {{{vendorManagementAgent.Name}}}
+        - {{{vendorFinanceAgent.Name}}}
 
         Based on the history, delegate requests to the appropriate agents:
         - If any financial details are required, ask {{{finanaceAgent.Name}}} to get the required data.
         - If any Project daily tasks details are required, ask {{{projectTaskAgent.Name}}}.
         - If any Safety, risks, and compliance details are required, ask {{{safetyRiskAgent.Name}}}.
         - If any Schedule details are required, ask {{{scheduleAgent.Name}}}.
-        - For any vendor data, ask {{{vendorManagementAgent.Name}}}.
+        - If any vendor data, ask {{{vendorFinanceAgent.Name}}}.
+        - If any of the agents requests additional information, then ask {{{projectLeaderAgent.Name}}}
 
         History:
         {{$history}}
@@ -155,6 +164,7 @@ app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
           HistoryVariableName = "history",
           // Save tokens by not including the entire history in the prompt
           HistoryReducer = new ChatHistoryTruncationReducer(5),
+          Arguments = new KernelArguments(new AzureOpenAIPromptExecutionSettings() { Temperature = 0.1 } )
       };
 
     KernelFunction terminationFunction =
@@ -173,24 +183,60 @@ app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
     KernelFunctionTerminationStrategy terminationStrategy =
       new(terminationFunction, kernel)
       {
+          Agents = [projectLeaderAgent],
+
           // Parse the function response.
           ResultParser = (result) =>
         result.GetValue<string>()?.Contains("yes", StringComparison.OrdinalIgnoreCase) ?? false,
           // The prompt variable name for the history argument.
           HistoryVariableName = "lastmessage",
           // Save tokens by not including the entire history in the prompt
-          HistoryReducer = new ChatHistoryTruncationReducer(3),
+          HistoryReducer = new ChatHistoryTruncationReducer(1),
           // Limit total number of turns no matter what
           MaximumIterations = 5,
+          Arguments = new KernelArguments(new AzureOpenAIPromptExecutionSettings() { Temperature = 0.1 })
       };
 
+    const string OuterTerminationInstructions =
+        $$$"""
+        Determine if user request has been fully answered.
+        
+        respond with a single word: yes otherwise response with: no
+        
+        History:
+        {{${{{KernelFunctionTerminationStrategy.DefaultHistoryVariableName}}}}}
+        """;
+
+    KernelFunction outerTerminationFunction = KernelFunctionFactory.CreateFromPrompt(OuterTerminationInstructions, new AzureOpenAIPromptExecutionSettings() {Temperature=0.1});
+
     // Create a chat for agent interaction.
-    AgentGroupChat chat =
-        new(projectManagerAgent, projectTaskAgent, safetyRiskAgent, scheduleAgent, finanaceAgent, vendorManagementAgent)
+    AgentGroupChat CreateChat() =>
+        new(projectLeaderAgent, projectManagerAgent, projectTaskAgent, safetyRiskAgent, scheduleAgent, finanaceAgent, vendorFinanceAgent)
         {
             ExecutionSettings = new() { SelectionStrategy = selectionStrategy, TerminationStrategy = terminationStrategy }
         };
 
+    AggregatorAgent projectAgent =
+            new(CreateChat)
+            {
+                Name = "ProjectStatus",
+                Mode = AggregatorMode.Nested,
+            };
+
+    AgentGroupChat chat =
+        new(projectAgent)
+        {
+            ExecutionSettings =
+                new()
+                {
+                    TerminationStrategy =
+                        new KernelFunctionTerminationStrategy(outerTerminationFunction, kernel.Clone())
+                        {
+                            ResultParser = (result) => result.GetValue<string>()?.Contains("yes", StringComparison.OrdinalIgnoreCase) ?? false,
+                            MaximumIterations = 5,
+                        },
+                }
+        };
 
     // Invoke chat and display messages.
     ChatMessageContent input = new(AuthorRole.User, message);
@@ -198,7 +244,7 @@ app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
 
     var messages = new List<object>();
 
-    await foreach (ChatMessageContent content in chat.InvokeAsync())
+    await foreach (ChatMessageContent content in chat.InvokeAsync(projectAgent))
     {
         messages.Add(new
         {

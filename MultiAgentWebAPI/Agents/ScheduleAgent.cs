@@ -35,7 +35,7 @@ namespace MultiAgentWebAPI.Agents
                 Instructions = ScheduleAgentInstructions,
                 Kernel = kernel,
                 Arguments =
-                    new KernelArguments(new AzureOpenAIPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto() })
+                    new KernelArguments(new AzureOpenAIPromptExecutionSettings() { FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(), Temperature = 0.1 })
                     {
                         { "repository", "microsoft/semantic-kernel" }
                     }

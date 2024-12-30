@@ -5,15 +5,15 @@ using MultiAgentWebAPI.Utilities;
 
 namespace MultiAgentWebAPI.Plugins
 {
-    public class VendorManagementPlugin()
+    public class VendorFinancePlugin()
     {
-        [KernelFunction("get_vendor_finance_and_management_details")]
-        [Description("Gets vendor financials and management details for the Project given ProjectID.")]
-        public IEnumerable<VendorFinancials> GetVendorManagementDetails(string ProjectID)
+        [KernelFunction("get_vendor_finance_details")]
+        [Description("Gets vendor financials details for the Project given ProjectID.")]
+        public IEnumerable<VendorFinancials> GetVendorFinanceDetails(string ProjectID)
         {
              try
             {
-                Console.WriteLine($"Get vendor management details details from CSV for: {ProjectID}.");
+                Console.WriteLine($"Get vendor finance details details from CSV for: {ProjectID}.");
 
                 var csvFilePath = "data/VendorFinancials.csv";
 
