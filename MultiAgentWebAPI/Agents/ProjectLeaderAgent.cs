@@ -5,12 +5,12 @@ using MultiAgentWebAPI.Plugins;
 
 namespace MultiAgentWebAPI.Agents
 {
-    public class ProjectLeaderAgent
+    public class ProjectLeaderAgent: IAgent
     {
         private const string ProjectLeaderAgentName = "ProjectLeaderAgent";
         private const string ProjectLeaderAgentInstructions =
             """
-            As the Project Leader Agent, your job is to gather all the agent responses and combine them into a single cohesive project status report. Summarize the provided content without adding your own suggestions.
+            As the Project Leader Agent, your job is to gather all the agent responses and combine them into a single cohesive response. Summarize the provided content without adding your own suggestions.
 
             If information has been requested, only repeat the user request.
 
@@ -25,8 +25,6 @@ namespace MultiAgentWebAPI.Agents
                 endpoint: endPoint,
                 apiKey: apiKey
             );
-
-            builder.Plugins.AddFromType<ProjectPlugin>();
 
             builder.Services.AddLogging(config => { config.AddConsole(); config.SetMinimumLevel(LogLevel.Trace); });
 

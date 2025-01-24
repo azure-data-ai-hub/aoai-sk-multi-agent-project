@@ -9,8 +9,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="data\Project Financials.csv" />
+    <None Remove="data\Project Management Daily Tasks.csv" />
+    <None Remove="data\Project Management Safety Risk Reports.csv" />
+    <None Remove="data\Projectinfo.csv" />
+    <None Remove="data\VendorFinancials.csv" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CsvHelper" Version="33.0.1" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.46.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.ApplicationInsights" Version="2.22.0" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.32.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Agents.Abstractions" Version="1.32.0-alpha" />
     <PackageReference Include="Microsoft.SemanticKernel.Agents.Core" Version="1.32.0-alpha" />

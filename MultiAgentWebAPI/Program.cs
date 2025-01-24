@@ -1,6 +1,6 @@
 using MultiAgentWebAPI.Agents;
+using MultiAgentWebAPI.Utilities;
 using Microsoft.AspNetCore.Mvc;
-
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -22,11 +22,17 @@ builder.Services.AddCors(options =>
         builder => builder.WithOrigins("http://localhost:3000")
                           .AllowAnyMethod()
                           .AllowAnyHeader());
+
+    options.AddPolicy("AllowMultiAgentWebAPP",
+        builder => builder.WithOrigins("https://multiagentwebapp.azurewebsites.net")
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
 });
 
 var app = builder.Build();
 
 app.UseCors("AllowLocalhost3000");
+app.UseCors("AllowMultiAgentWebAPP");
 
 var config = new ConfigurationBuilder()
     .AddUserSecrets<Program>()
@@ -48,81 +54,24 @@ app.MapGet("/", () =>
 })
     .WithName("Index");
 
-app.MapPost("/ProjectManagerAgentChat", string (HttpRequest request) =>
-{
-    return "Welcome to Project Manager Agent Chat";
-})
-    .WithName("ProjectManagerAgentChat");
-
-app.MapPost("/ScheduleAgentChat", string (HttpRequest request) =>
-{
-    return"Welcome to Scheudle Agent Chat";
-})
-    .WithName("ScheduleAgentChat");
-
-app.MapPost("/FinanaceAgentChat", string (HttpRequest request) =>
-{
-    return "Welcome to Finanace Agent Chat";
-})
-    .WithName("FinanaceAgentChat");
-
-
 app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
 {
-
-    // TODO: Factory pattern to create these agents
-
-    ChatCompletionAgent projectLeaderAgent = new ProjectLeaderAgent().Initialize(
-        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
-        endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
-        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
-        );
-
-    ChatCompletionAgent projectManagerAgent = new ProjectManagerAgent().Initialize(
-        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
-        endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
-        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
-        );
-
-    ChatCompletionAgent projectTaskAgent = new ProjectTasksAgent().Initialize(
-        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
-        endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
-        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
-        );
-
-    ChatCompletionAgent safetyRiskAgent = new SafetyRiskAgent().Initialize(
-        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
-        endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
-        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
-        );
-
-    ChatCompletionAgent scheduleAgent = new ScheduleAgent().Initialize(
-        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
-        endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
-        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
-        );
-
-    ChatCompletionAgent finanaceAgent = new FinanceAgent().Initialize(
-        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
-        endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
-        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
-        );
-
-    ChatCompletionAgent vendorFinanceAgent = new VendorFinanceAgent().Initialize(
-        deploymentName: builder.Configuration["AzureOpenAI:DeploymentName"]!,
-        endPoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
-        apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
-        );
+    var projectLeaderAgent = AgentFactory.CreateAgent<ProjectLeaderAgent>(builder.Configuration);
+    var dataAnalysisAgent = AgentFactory.CreateAgent<DataAnalysisAgent>(builder.Configuration);
+    var inventoryManagementAgent = AgentFactory.CreateAgent<InventoryManagementAgent>(builder.Configuration);
+    var salesAgent = AgentFactory.CreateAgent<SalesAgent>(builder.Configuration);
+    var finanaceAgent = AgentFactory.CreateAgent<FinanceAgent>(builder.Configuration);
+    var customerServiceAgent = AgentFactory.CreateAgent<CustomerServiceAgent>(builder.Configuration);
 
     IKernelBuilder kbuilder = Kernel.CreateBuilder();
     kbuilder.AddAzureOpenAIChatCompletion(
-        deploymentName: "gpt-4o",
+        deploymentName: builder.Configuration["AzureOpenAI:ReasoningModelDeploymentName"]!,
         endpoint: builder.Configuration["AzureOpenAI:EndPoint"]!,
         apiKey: builder.Configuration["AzureOpenAI:ApiKey"]!
     );
 
     kbuilder.Services.AddLogging(config => { config.AddConsole(); config.SetMinimumLevel(LogLevel.Trace); });
-
+    
     var kernel = kbuilder.Build();
 
     KernelFunction selectionFunction =
@@ -132,19 +81,19 @@ app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
         State only the name of the participant with out explanation to take the next turn.
 
         Choose only from these participants:
-        - {{{projectLeaderAgent.Name}}}
-        - {{{projectTaskAgent.Name}}}
-        - {{{safetyRiskAgent.Name}}}
-        - {{{scheduleAgent.Name}}}
+        - {{{salesAgent.Name}}}
+        - {{{dataAnalysisAgent.Name}}}
+        - {{{inventoryManagementAgent.Name}}}
         - {{{finanaceAgent.Name}}}
-        - {{{vendorFinanceAgent.Name}}}
-
+        - {{{customerServiceAgent.Name}}}
+        
+        
         Based on the history, delegate requests to the appropriate agents:
         - If any financial details are required, ask {{{finanaceAgent.Name}}} to get the required data.
-        - If any Project daily tasks details are required, ask {{{projectTaskAgent.Name}}}.
-        - If any Safety, risks, and compliance details are required, ask {{{safetyRiskAgent.Name}}}.
-        - If any Schedule details are required, ask {{{scheduleAgent.Name}}}.
-        - If any vendor data, ask {{{vendorFinanceAgent.Name}}}.
+        - If any sales details details are required, ask {{{salesAgent.Name}}}.
+        - If any inventory details are required, ask {{{inventoryManagementAgent.Name}}}.
+        - If any customer details are required, ask {{{customerServiceAgent.Name}}}.
+        - If any vendor data analysis required, ask {{{dataAnalysisAgent.Name}}}.
         - If any of the agents requests additional information, then ask {{{projectLeaderAgent.Name}}}
 
         History:
@@ -156,10 +105,8 @@ app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
     KernelFunctionSelectionStrategy selectionStrategy =
       new(selectionFunction, kernel)
       {
-          // Always start with the writer agent.
-          InitialAgent = projectManagerAgent,
           // Parse the function response.
-          ResultParser = (result) => result.GetValue<string>() ?? projectManagerAgent.Name!,
+          ResultParser = (result) => result.GetValue<string>() ?? projectLeaderAgent.Name!,
           // The prompt variable name for the history argument.
           HistoryVariableName = "history",
           // Save tokens by not including the entire history in the prompt
@@ -211,7 +158,7 @@ app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
 
     // Create a chat for agent interaction.
     AgentGroupChat CreateChat() =>
-        new(projectLeaderAgent, projectManagerAgent, projectTaskAgent, safetyRiskAgent, scheduleAgent, finanaceAgent, vendorFinanceAgent)
+        new(projectLeaderAgent, salesAgent, inventoryManagementAgent, customerServiceAgent, dataAnalysisAgent, finanaceAgent)
         {
             ExecutionSettings = new() { SelectionStrategy = selectionStrategy, TerminationStrategy = terminationStrategy }
         };
@@ -220,7 +167,7 @@ app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
             new(CreateChat)
             {
                 Name = "ProjectStatus",
-                Mode = AggregatorMode.Nested,
+                Mode = AggregatorMode.Flat,
             };
 
     AgentGroupChat chat =
