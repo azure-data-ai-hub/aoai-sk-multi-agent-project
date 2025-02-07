@@ -52,6 +52,7 @@ dotnet user-secrets init
 dotnet user-secrets set "AzureOpenAI:ApiKey" "<your-api-key>"
 dotnet user-secrets set "AzureOpenAI:EndPoint" "<your-endpoint>"
 dotnet user-secrets set "AzureOpenAI:DeploymentName" "<your-deployment>"
+dotnet user-secrets set "AzureOpenAI:ReasoningModelDeploymentName" "<your-reasoning-model-deployment>"
 
 ### Running the Backend
 
