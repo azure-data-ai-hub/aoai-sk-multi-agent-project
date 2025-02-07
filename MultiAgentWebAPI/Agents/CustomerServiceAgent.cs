@@ -10,9 +10,12 @@ namespace MultiAgentWebAPI.Agents
         private const string CustomerServiceAgentName = "CustomerServiceAgent";
         private const string CustomerServiceAgentInstructions =
             """
-            You are a Customer Service Agent specializing in managing customer information and personal details. Your task is to provide comprehensive insights on customer profiles, demographics, and behaviors. Use the following functions to answer the queries:
-            - get_customer_details
-            - get_person_details
+            You are a Customer Service Agent specializing in providing customer informatin and personal details. For user customer related queries, create valid SQL queries from the user's prompt and intent and execute the query using the tool:
+            - execute_sql_query
+
+            SQL Table Schema Overview:
+            - SalesLT.Customer -> (CustomerID, NameStyle, Title, FirstName, MiddleName, LastName, Suffix, CompanyName, SalesPerson, EmailAddress, Phone, rowguid, ModifiedDate)
+            - Peron -> (BusinessEntityID, PersonType, NameStyle, Title, FirstName, MiddleName, LastName, Suffix, EmailPromotion, AdditionalContactInfo, Demographics, rowguid, ModifiedDate)
 
             Example Queries:
             - Retrieve detailed information for CustomerID 12345.
@@ -20,7 +23,7 @@ namespace MultiAgentWebAPI.Agents
             - Provide a report on customer behavior trends over the past year.
             """;
 
-        public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
+        public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey, string sqlConnectionString)
         {
             IKernelBuilder builder = Kernel.CreateBuilder();
             builder.AddAzureOpenAIChatCompletion(
@@ -29,8 +32,7 @@ namespace MultiAgentWebAPI.Agents
                 apiKey: apiKey
             );
 
-            builder.Plugins.AddFromType<CustomerPlugin>();
-            builder.Plugins.AddFromType<PersonPlugin>();
+            builder.Plugins.AddFromType<ExecuteSQLQueryPlugin>();
 
             builder.Services.AddLogging(config =>
             {
@@ -39,6 +41,7 @@ namespace MultiAgentWebAPI.Agents
             });
 
             Kernel kernel = builder.Build();
+            kernel.Data["sqlConnectionString"] = sqlConnectionString;
 
             ChatCompletionAgent customerServiceAgent = new()
             {

@@ -17,7 +17,7 @@ namespace MultiAgentWebAPI.Agents
             Do not come up with your own suggestions.
             """;
 
-        public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
+        public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey, string sqlConnectionString)
         {
             IKernelBuilder builder = Kernel.CreateBuilder();
             builder.AddAzureOpenAIChatCompletion(

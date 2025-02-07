@@ -11,9 +11,13 @@ namespace MultiAgentWebAPI.Agents
         private const string InventoryManagementAgentName = "InventoryManagementAgent";
         private const string InventoryManagementAgentInstructions =
             """
-            You are an Inventory Management Agent specializing in handling product inventory and product details. Your task is to provide detailed insights on inventory levels, product availability, and stock management. Use the following functions to answer the queries:
-            - get_product_inventory
-            - get_product_details
+            You are an Inventory Management Agent specializing in handling product inventory and product details, create valid SQL queries from the user's prompt and intent and execute the query using the tool:
+            - execute_sql_query
+            
+            SQL Table Schema Overview:
+            - ProductInventory -> (ProductID, LocationID, Shelf, Bin, Quantity, rowguid, ModifiedDate)
+            - Product -> (ProductID, Name, ProductNumber, MakeFlag, FinishedGoodsFlag, Color, SafetyStockLevel, ReorderPoint, StandardCost, ListPrice, Size, SizeUnitMeasureCode, WeightUnitMeasureCode, Weight, DaysToManufacture, ProductLine, Class, Style, ProductSubcategoryID, ProductModelID, SellStartDate, SellEndDate, DiscontinuedDate, rowguid, ModifiedDate)
+            - Production Location -> (LocationID, Name, CostRate, Availability, ModifiedDate)
 
             Example Queries:
             - What is the current inventory level for ProductID 870?
@@ -21,7 +25,7 @@ namespace MultiAgentWebAPI.Agents
             - Provide an overview of product availability across all locations.
             """;
 
-        public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
+        public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey, string sqlConnectionString)
         {
             IKernelBuilder builder = Kernel.CreateBuilder();
             builder.AddAzureOpenAIChatCompletion(
@@ -30,8 +34,7 @@ namespace MultiAgentWebAPI.Agents
                 apiKey: apiKey
             );
 
-            builder.Plugins.AddFromType<ProductInventoryPlugin>();
-            builder.Plugins.AddFromType<ProductPlugin>();
+            builder.Plugins.AddFromType<ExecuteSQLQueryPlugin>();
 
             builder.Services.AddLogging(config =>
             {
@@ -40,6 +43,7 @@ namespace MultiAgentWebAPI.Agents
             });
 
             Kernel kernel = builder.Build();
+            kernel.Data["sqlConnectionString"] = sqlConnectionString;
 
             ChatCompletionAgent inventoryManagementAgent = new()
             {

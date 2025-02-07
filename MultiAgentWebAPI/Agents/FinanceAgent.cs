@@ -11,18 +11,21 @@ namespace MultiAgentWebAPI.Agents
         private const string FinanceAgentName = "FinanceAgent";
         private const string FinanceAgentInstructions =
             """
-            You are a Finance Agent specializing in analyzing purchase orders and product cost histories. Your task is to provide detailed financial insights, cost analyses, and purchase order evaluations. Use the following functions to answer the queries:
-            - get_purchase_order_header
-            - get_purchase_order_detail
-            - get_product_cost_history
-
+            You are a Finance Agent specializing in providing finanace related data. For user purchase related queries, create valid SQL queries from the user's prompt and intent and execute the query using the tool:
+            - execute_sql_query
+         
+            SQL Table Schema Overview:
+            - PurchaseOrderDetail -> (PurchaseOrderID, PurchaseOrderDetailID, DueDate, OrderQty, ProductID, UnitPrice, LineTotal, ReceivedQty, RejectedQty, StockedQty, ModifiedDate)
+            - PurchaseOrderHeader -> (PurchaseOrderID, RevisionNumber, Status, EmployeeID, VendorID, ShipMethodID, OrderDate, ShipDate, SubTotal, TaxAmt, Freight, TotalDue, ModifiedDate)
+            - ProductCostHistory -> (ProductID,StartDate,EndDate,StandardCost,ModifiedDate)
+            
             Example Queries:
             - What are the total expenditures on purchases for the current fiscal year?
             - Analyze the cost trends of ProductID 870 over the past six months.
             - Provide a detailed report on purchase order histories for VendorID 12345.
             """;
 
-        public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey)
+        public ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey, string sqlConnectionString)
         {
             IKernelBuilder builder = Kernel.CreateBuilder();
             builder.AddAzureOpenAIChatCompletion(
@@ -31,9 +34,7 @@ namespace MultiAgentWebAPI.Agents
                 apiKey: apiKey
             );
 
-            builder.Plugins.AddFromType<PurchaseOrderHeaderPlugin>();
-            builder.Plugins.AddFromType<PurchaseOrderDetailPlugin>();
-            builder.Plugins.AddFromType<ProductCostHistoryPlugin>();
+            builder.Plugins.AddFromType<ExecuteSQLQueryPlugin>();
 
             builder.Services.AddLogging(config =>
             {
@@ -42,6 +43,7 @@ namespace MultiAgentWebAPI.Agents
             });
 
             Kernel kernel = builder.Build();
+            kernel.Data["sqlConnectionString"] = sqlConnectionString;
 
             ChatCompletionAgent financeAgent = new()
             {

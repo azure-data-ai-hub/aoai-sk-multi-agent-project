@@ -4,6 +4,6 @@ namespace MultiAgentWebAPI.Agents
 {
     public interface IAgent
     {
-        ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey);
+        ChatCompletionAgent Initialize(string endPoint, string deploymentName, string apiKey, string sqlConnectionString);
     }
 }

@@ -9,6 +9,7 @@ using Microsoft.SemanticKernel.Agents.Chat;
 using Microsoft.SemanticKernel.Agents.History;
 using ChatResponseFormat = OpenAI.Chat.ChatResponseFormat;
 using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +54,162 @@ app.MapGet("/", () =>
     return "Welcome to the Multi Agent Web API!";
 })
     .WithName("Index");
+
+app.MapPost("/SalesAgentChat", async ([FromBody] string message) =>
+{
+    var salesAgent = AgentFactory.CreateAgent<SalesAgent>(builder.Configuration);
+
+    ChatMessageContent input = new(AuthorRole.User, message);
+
+    ChatHistory history = [];
+    history.Add(input);
+    
+    var messages = new List<object>();
+
+    await foreach (ChatMessageContent content in salesAgent.InvokeAsync(history))
+    {
+        messages.Add(new
+        {
+            Role = content.Role,
+            AuthorName = content.AuthorName ?? "*",
+            Content = content.Content
+        });
+    }
+
+    // Return JSON response to the caller
+    return Results.Json(messages);
+
+}).WithName("SalesAgentChat");
+
+app.MapPost("/DataAnalysisAgentChat", async ([FromBody] string message) =>
+{
+    var dataAnalysisAgent = AgentFactory.CreateAgent<DataAnalysisAgent>(builder.Configuration);
+
+    ChatMessageContent input = new(AuthorRole.User, message);
+
+    ChatHistory history = [];
+    history.Add(input);
+
+    var messages = new List<object>();
+
+    await foreach (ChatMessageContent content in dataAnalysisAgent.InvokeAsync(history))
+    {
+        messages.Add(new
+        {
+            Role = content.Role,
+            AuthorName = content.AuthorName ?? "*",
+            Content = content.Content
+        });
+    }
+
+    // Return JSON response to the caller
+    return Results.Json(messages);
+
+}).WithName("DataAnalysisAgentChat");
+
+app.MapPost("/FinanaceAgentChat", async ([FromBody] string message) =>
+{
+    var financeAgent = AgentFactory.CreateAgent<FinanceAgent>(builder.Configuration);
+
+    ChatMessageContent input = new(AuthorRole.User, message);
+
+    ChatHistory history = [];
+    history.Add(input);
+
+    var messages = new List<object>();
+
+    await foreach (ChatMessageContent content in financeAgent.InvokeAsync(history))
+    {
+        messages.Add(new
+        {
+            Role = content.Role,
+            AuthorName = content.AuthorName ?? "*",
+            Content = content.Content
+        });
+    }
+
+    // Return JSON response to the caller
+    return Results.Json(messages);
+
+}).WithName("FinanceAgentChat");
+
+app.MapPost("/InventoryManagementAgentChat", async ([FromBody] string message) =>
+{
+    var financeAgent = AgentFactory.CreateAgent<InventoryManagementAgent>(builder.Configuration);
+
+    ChatMessageContent input = new(AuthorRole.User, message);
+
+    ChatHistory history = [];
+    history.Add(input);
+
+    var messages = new List<object>();
+
+    await foreach (ChatMessageContent content in financeAgent.InvokeAsync(history))
+    {
+        messages.Add(new
+        {
+            Role = content.Role,
+            AuthorName = content.AuthorName ?? "*",
+            Content = content.Content
+        });
+    }
+
+    // Return JSON response to the caller
+    return Results.Json(messages);
+
+}).WithName("InventoryManagementAgentChat");
+
+app.MapPost("/CustomerServiceAgentChat", async ([FromBody] string message) =>
+{
+    var financeAgent = AgentFactory.CreateAgent<CustomerServiceAgent>(builder.Configuration);
+
+    ChatMessageContent input = new(AuthorRole.User, message);
+
+    ChatHistory history = [];
+    history.Add(input);
+
+    var messages = new List<object>();
+
+    await foreach (ChatMessageContent content in financeAgent.InvokeAsync(history))
+    {
+        messages.Add(new
+        {
+            Role = content.Role,
+            AuthorName = content.AuthorName ?? "*",
+            Content = content.Content
+        });
+    }
+
+    // Return JSON response to the caller
+    return Results.Json(messages);
+
+}).WithName("CustomerServiceAgentChat");
+
+app.MapPost("/SQLAgentChat", async ([FromBody] string message) =>
+{
+    var financeAgent = AgentFactory.CreateAgent<SQLAgent>(builder.Configuration);
+
+    ChatMessageContent input = new(AuthorRole.User, message);
+
+    ChatHistory history = [];
+    history.Add(input);
+
+    var messages = new List<object>();
+
+    await foreach (ChatMessageContent content in financeAgent.InvokeAsync(history))
+    {
+        messages.Add(new
+        {
+            Role = content.Role,
+            AuthorName = content.AuthorName ?? "*",
+            Content = content.Content
+        });
+    }
+
+    // Return JSON response to the caller
+    return Results.Json(messages);
+
+}).WithName("SQLAgentChat");
 
 app.MapPost("/MultiAgentChat", async ([FromBody] string message) =>
 {

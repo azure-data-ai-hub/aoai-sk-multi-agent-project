@@ -15,7 +15,7 @@ namespace MultiAgentWebAPI.Plugins
             {
                 Console.WriteLine($"Get customer details from CSV for: {CustomerID}.");
 
-                var csvFilePath = "data/Customers.csv";
+                var csvFilePath = "data/Customer.csv";
 
                 var customers = CSVHelper.ReadRecords<Customer>(csvFilePath, c => c.CustomerID.ToString().Equals(CustomerID, StringComparison.OrdinalIgnoreCase));
 
